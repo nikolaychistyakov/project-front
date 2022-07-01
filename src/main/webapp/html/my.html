@@ -2,10 +2,422 @@
 <head>
     <title>RPG</title>
     <script src=https://code.jquery.com/jquery-3.6.0.min.js></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link href="/css/my.css" rel="stylesheet">
 </head>
-<body>
-<h1>RPG admin panel</h1>
+<body onload="loadUsers('',1)">
+<div class="container">
+    <h1>RPG admin panel</h1>
 
+    <select onchange="update(1)" id="count_page">
+        <option selected>3</option>
+        <option>5</option>
+        <option>13</option>
+        <option>20</option>
+    </select>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Title</th>
+            <th scope="col">Race</th>
+            <th scope="col">Profession</th>
+            <th scope="col">Level</th>
+            <th scope="col">Birthday</th>
+            <th scope="col">Banned</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
+        </tr>
+        </thead>
+        <tbody id="tb">
+        </tbody>
+    </table>
+    <div>
+        <ul id="pages" class="pagination">
+
+        </ul>
+    </div>
+    <hr>
+    <h1>Create new account:</h1>
+    <br>
+    <form id="create">
+        <div class="form-group row">
+            <label for="name" class="col-sm-2 col-form-label">Name</label>
+            <div class="col-sm-4">
+                <input type="text" id="name" class="form-control" placeholder="Name" required minlength="1"
+                       maxlength="12">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="title" class="col-sm-2 col-form-label">Title</label>
+            <div class="col-sm-4">
+                <input type="text" id="title" class="form-control" placeholder="Title" required minlength="1"
+                       maxlength="30">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="race" class="col-sm-2 col-form-label">Race</label>
+            <div class="col-sm-4">
+                <select id="race">
+                    <option selected>HUMAN</option>
+                    <option>DWARF</option>
+                    <option>ELF</option>
+                    <option>GIANT</option>
+                    <option>ORC</option>
+                    <option>TROLL</option>
+                    <option>HOBBIT</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="profession" class="col-sm-2 col-form-label">Profession</label>
+            <div class="col-sm-4">
+                <select id="profession">
+                    <option selected>WARRIOR</option>
+                    <option>ROGUE</option>
+                    <option>SORCERER</option>
+                    <option>CLERIC</option>
+                    <option>PALADIN</option>
+                    <option>NAZGUL</option>
+                    <option>WARLOCK</option>
+                    <option>DRUID</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="level" class="col-sm-2 col-form-label">Level</label>
+            <div class="col-sm-4">
+                <input type="number" id="level" min="0" max="100">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="birthday" class="col-sm-2 col-form-label">Birthday</label>
+            <div class="col-sm-4">
+                <input type="date" id="birthday">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="banned" class="col-sm-2 col-form-label">Banned</label>
+            <div class="col-sm-4">
+                <select id="banned">
+                    <option selected>false</option>
+                    <option>true</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" onclick="create()">
+            Save
+        </button>
+    </form>
+</div>
 </body>
+<script type="text/javascript">
+
+
+    function update(currentPage) {
+        let add = '?';
+        add += "&pageNumber=" + (+currentPage - 1);
+        add += "&pageSize=" + +getUsersOnPage();
+
+        loadUsers(add, currentPage)
+
+    }
+
+
+    function loadUsers(add, currentPage) {
+
+        let users = JSON.parse(GET("/rest/players" + add).responseText);
+        console.log(users);
+        let table = document.getElementById("tb");
+        table.innerHTML = "";
+
+        for (let i = 0; i < users.length; i++) {
+
+            let tr = document.createElement("tr");
+            let th = document.createElement("th");
+            th.appendChild(document.createTextNode(users[i].id));
+            tr.appendChild(th);
+
+            let td1 = document.createElement("td");
+            td1.setAttribute("id", "name" + users[i].id);
+            td1.appendChild(document.createTextNode(users[i].name));
+            tr.appendChild(td1);
+
+            let td2 = document.createElement("td");
+            td2.setAttribute("id", "title" + users[i].id);
+            td2.appendChild(document.createTextNode(users[i].title));
+            tr.appendChild(td2);
+
+            let td3 = document.createElement("td");
+            td3.setAttribute("id", "race" + users[i].id);
+            td3.appendChild(document.createTextNode(users[i].race));
+            tr.appendChild(td3);
+
+            let td4 = document.createElement("td");
+            td4.setAttribute("id", "profession" + users[i].id);
+            td4.appendChild(document.createTextNode(users[i].profession));
+            tr.appendChild(td4);
+
+            let td5 = document.createElement("td");
+            td5.appendChild(document.createTextNode(users[i].level));
+            tr.appendChild(td5);
+
+            let birth = new Date();
+            birth.setTime(users[i].birthday);
+            let td6 = document.createElement("td");
+            td6.appendChild(document.createTextNode(birth.toDateString()));
+            tr.appendChild(td6);
+
+            let td7 = document.createElement("td");
+            td7.setAttribute("id", "banned" + users[i].id);
+            td7.appendChild(document.createTextNode(users[i].banned));
+            tr.appendChild(td7);
+
+
+            let td8 = document.createElement("td");
+            let img1 = document.createElement("img");
+            img1.setAttribute("src", "/img/edit.png");
+            td8.setAttribute("id", "edit_btn" + users[i].id);
+            img1.addEventListener("click", function () {
+                editButton(add, users[i].id, currentPage)
+            });
+            td8.appendChild(img1);
+            tr.appendChild(td8);
+
+
+            let td9 = document.createElement("td");
+            let img2 = document.createElement("img");
+            img2.setAttribute("src", "/img/delete.png");
+            img2.setAttribute("id", "delete_btn" + users[i].id);
+            img2.addEventListener("click", function () {
+                deleteUser(users[i].id, currentPage)
+            });
+
+            td9.appendChild(img2);
+            tr.appendChild(td9);
+
+
+            table.appendChild(tr);
+        }
+
+        $(document).ready(function () {
+            $("#pages a").each(function () {
+                if ($(this).attr('id') === "page-link" + currentPage) {
+                    $(this).addClass("active");
+                }
+            });
+        });
+
+        pages(getUsersOnPage(), getCountUsers(), currentPage);
+
+
+    }
+
+    function editButton(add, id, currentPage) {
+        let users = JSON.parse(GET("/rest/players/" + add).responseText);
+
+        for (let i = 0; i < users.length; i++) {
+            let user = users[i];
+
+            if (user.id == id) {
+
+                let td1 = document.getElementById("name" + user.id);
+                let tdd1 = document.createElement("td");
+                let name = document.createElement("input");
+                name.setAttribute("type", "text");
+                name.setAttribute("minlength", "1");
+                name.setAttribute("maxlength", "12");
+                name.setAttribute("id", "name" + user.id);
+                name.setAttribute("value", user.name);
+                tdd1.appendChild(name);
+                td1.parentNode.replaceChild(tdd1, td1);
+
+                let td2 = document.getElementById("title" + user.id);
+
+                let tdd2 = document.createElement("td");
+                let title = document.createElement("input");
+                title.setAttribute("type", "text");
+                title.setAttribute("minlength", "1");
+                title.setAttribute("maxlength", "30");
+                title.setAttribute("id", "title" + user.id);
+                title.setAttribute("value", user.title);
+                tdd2.appendChild(title);
+                td2.parentNode.replaceChild(tdd2, td2);
+
+                let td3 = document.getElementById("race" + user.id);
+
+                let tdd3 = document.createElement("td");
+                let raceIn = document.createElement("select");
+                raceIn.setAttribute("id", "race" + user.id);
+                let race = ["HUMAN", "DWARF", "ELF", "GIANT", "ORC", "TROLL", "HOBBIT"];
+                for (let i = 0; i < race.length; i++) {
+                    let option = document.createElement("option");
+                    if (race[i] === user.race) {
+                        option.selected = true;
+                    }
+                    option.appendChild(document.createTextNode(race[i]));
+                    raceIn.appendChild(option);
+                }
+                tdd3.appendChild(raceIn);
+                td3.parentNode.replaceChild(tdd3, td3);
+
+                let td4 = document.getElementById("profession" + user.id);
+
+                let tdd4 = document.createElement("td");
+                let profession = document.createElement("select");
+                profession.setAttribute("id", "profession" + user.id);
+                let professions = ["WARRIOR", "ROGUE", "SORCERER", "CLERIC", "PALADIN", "NAZGUL", "WARLOCK", "DRUID"];
+                for (let i = 0; i < professions.length; i++) {
+                    let option = document.createElement("option");
+                    if (professions[i] === user.profession) {
+                        option.selected = true;
+                    }
+                    option.appendChild(document.createTextNode(professions[i]));
+                    profession.appendChild(option);
+                }
+                tdd4.appendChild(profession);
+                td4.parentNode.replaceChild(tdd4, td4);
+
+                let td5 = document.getElementById("banned" + user.id);
+
+                let tdd5 = document.createElement("td");
+                let banned = document.createElement("select");
+                banned.setAttribute("id", "banned" + user.id);
+                let banneds = ["true", "false"];
+                for (let i = 0; i < banneds.length; i++) {
+                    let option = document.createElement("option");
+                    if (user.banned === true && banneds[i] === "true") {
+                        option.selected = true;
+                    }
+                    if (user.banned === false && banneds[i] === "false") {
+                        option.selected = true;
+                    }
+                    option.appendChild(document.createTextNode(banneds[i]));
+                    banned.appendChild(option);
+                }
+                tdd5.appendChild(banned);
+                td5.parentNode.replaceChild(tdd5, td5);
+
+                let td6 = document.getElementById("edit_btn" + user.id);
+
+                let tdd6 = document.createElement("td");
+                let img = document.createElement("img");
+                img.setAttribute("src", "/img/save.png");
+                img.addEventListener("click", function () {
+                    updateUser(user.id, currentPage);
+                });
+                tdd6.appendChild(img);
+                td6.parentNode.replaceChild(tdd6, td6);
+
+                let td7 = document.getElementById("delete_btn" + user.id).style.display = 'none';
+            }
+        }
+    }
+
+    function updateUser(id, currentPage) {
+        let user = {};
+        user.name = document.getElementById("name" + id).value;
+        user.title = document.getElementById("title" + id).value;
+        user.race = document.getElementById("race" + id).value;
+        user.profession = document.getElementById("profession" + id).value;
+        user.banned = document.getElementById("banned" + id).value;
+        POST("/rest/players/" + id, JSON.stringify(user));
+
+        update(currentPage);
+    }
+
+
+    function getUsersOnPage() {
+        return document.getElementById('count_page').value;
+    }
+
+    function pages(usersOnPage, countUsers, currentPage) {
+
+        let pages = document.getElementById("pages");
+        pages.innerHTML = "";
+        let pagesCount = countUsers / usersOnPage;
+        for (let i = 0; i < pagesCount; i++) {
+            let li = document.createElement("li");
+            li.setAttribute("class", "page-item");
+            let a = document.createElement("a");
+            a.setAttribute("href", "#");
+            a.setAttribute("class", "page-link")
+            a.setAttribute("id", "page-link" + (i + 1));
+            a.setAttribute("onclick", "update(" + (i + 1) + ")");
+            a.appendChild(document.createTextNode(i + 1 + " "));
+            li.appendChild(a);
+            pages.appendChild(li);
+        }
+    }
+
+
+    function getCountUsers() {
+        return JSON.parse(GET("/rest/players/count").responseText)
+    }
+
+    function deleteUser(id, currentPage) {
+        DELETE("/rest/players/" + id);
+        update(currentPage);
+    }
+
+    function isEmpty(str) {
+        if (str.trim() == '')
+            return true;
+
+        return false;
+    }
+
+    function create() {
+        let user = {};
+        user.name = document.getElementById("name").value;
+        if (isEmpty(user.name)) {
+            return;
+        }
+
+        user.title = document.getElementById("title").value;
+        if (isEmpty(user.title)) {
+            return;
+        }
+
+        user.race = document.getElementById("race").value;
+        user.profession = document.getElementById("profession").value;
+        user.level = document.getElementById("level").value;
+        if (parseInt(user.level) < 0 || parseInt(user.level) > 100) {
+            return;
+        }
+        console.log(user.level);
+        user.birthday = new Date(document.getElementById("birthday").value).getTime();
+        user.banned = document.getElementById("banned").value;
+        console.log(user);
+        POST("/rest/players/", JSON.stringify(user));
+        update(1);
+    }
+
+    function GET(url) {
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open("GET", url, false);
+        httpRequest.send(null);
+        return httpRequest;
+    }
+
+    function POST(url, user) {
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open("POST", url, false);
+        httpRequest.setRequestHeader("Content-type", "application/json;charset=UTF-8");
+        httpRequest.send(user);
+
+        return httpRequest;
+    }
+
+    function DELETE(url) {
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open("DELETE", url, false);
+        httpRequest.send(null);
+        return httpRequest;
+    }
+
+</script>
 </html>
